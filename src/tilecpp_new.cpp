@@ -64,54 +64,61 @@ void cropToDivisor( std::string& inFileEXT,
 
 			auto sizeWidth = image.baseColumns();
 			auto sizeHeight = image.baseRows();
-			double sizeDiffW;
-			double sizeDiffH;
-			double sizePadW;
-			double sizePadH;
-			double divW;
-			double divH;
-			int croppedWidth;
-			int croppedHeight;
-			int tileW;
-			int tileH;
-			int widthTile;
-			int heightTile;
+			ssize_t sizeDiffW = 0;
+			ssize_t sizeDiffH = 0;
+			size_t sizePadW = 0;
+			size_t sizePadH = 0;
+			double divW = 0;
+			double divH = 0;
+			size_t croppedWidth = 0;
+			size_t croppedHeight = 0;
+			size_t tileW = 0;
+			size_t tileH = 0;
+			size_t widthTile = 0;
+			size_t heightTile = 0;
 
 			auto t1 = std::chrono::high_resolution_clock::now();
-			if ( (int)sizeWidth >= (int)imDim || (int)sizeHeight >= (int)imDim ) {
-
-				sizeDiffW = twitls::count::diff( sizeWidth, imDim );
-				sizeDiffH = twitls::count::diff( sizeHeight, imDim );
-				sizePadW = twitls::count::padd( sizeDiffW, imDim );
-				sizePadH = twitls::count::padd( sizeDiffH, imDim );
-
-				divW = twitls::count::divv( sizeWidth, sizePadW );
-				divH = twitls::count::divv( sizeHeight, sizePadH );
-
-				if ( !sizeWidth % imDim == 0 || !sizeHeight % imDim == 0 ) {
-					image.magick( "PNG" );
-					image.crop( Magick::Geometry( sizePadW, sizePadH, divW / 2, divH / 2 ) );
-					image.repage();
-					image.write( &croppedNameBlob );
-					croppedImage.read( croppedNameBlob );
+			try {
+				if ( (int)sizeWidth <= (int)imDim ) {
+					copyFiles( image, inFileEXT, outFileDir );
+					std::cout << inFileEXT << " has been copied." << "\n";
 				}
-				else if ( sizeWidth % imDim == 0 || sizeHeight % imDim == 0 ) {
-					croppedImage.read( inFileEXT );
+				else if ( (int)sizeWidth > (int)imDim ) {
+					sizeDiffW = twitls::count::diff( sizeWidth, imDim );
+					sizeDiffH = twitls::count::diff( sizeHeight, imDim );
+					sizePadW = twitls::count::padd( sizeDiffW, imDim );
+					sizePadH = twitls::count::padd( sizeDiffH, imDim );
+
+					divW = twitls::count::divv( sizeWidth, sizePadW );
+					divH = twitls::count::divv( sizeHeight, sizePadH );
+
+					if ( !sizeWidth % imDim == 0 || !sizeHeight % imDim == 0 ) {
+						image.magick( "PNG" );
+						image.crop( Magick::Geometry( sizePadW, sizePadH, divW / 2, divH / 2 ) );
+						image.repage();
+						image.write( &croppedNameBlob );
+						croppedImage.read( croppedNameBlob );
+					}
+					else if ( sizeWidth % imDim == 0 || sizeHeight % imDim == 0 ) {
+						croppedImage.read( inFileEXT );
+						croppedImage.repage();
+					}
+
+					croppedWidth = croppedImage.columns();
+					croppedHeight = croppedImage.rows();
+
+					tileW = croppedWidth / imDim;
+					tileH = croppedHeight / imDim;
+
+					widthTile = (int)( croppedImage.columns() / tileW );
+					heightTile = (int)( croppedImage.rows() / tileH );
+
+					cropTiles( tileH, tileW, outFileDir, inFileNoEXT, croppedNameBlob, widthTile, heightTile );
+					std::cout << inFileEXT << " has been cropped." << "\n";
 				}
-
-				croppedWidth = croppedImage.columns();
-				croppedHeight = croppedImage.rows();
-
-				tileW = croppedWidth / imDim;
-				tileH = croppedHeight / imDim;
-
-				widthTile = (int)( croppedImage.columns() / tileW );
-				heightTile = (int)( croppedImage.rows() / tileH );
-
-				cropTiles( tileH, tileW, outFileDir, inFileNoEXT, croppedNameBlob, widthTile, heightTile );
-				}
-			else {
-				copyFiles( image, inFileEXT, outFileDir );
+			}
+			catch ( const std::exception& e ) {
+				std::cout << e.what();
 			}
 
 			auto t2 = std::chrono::high_resolution_clock::now();
@@ -130,7 +137,7 @@ void cropToDivisor( std::string& inFileEXT,
 				std::cout << "Time taken for this image: " << duration / 1000.0 << " seconds" << "\n" << std::endl;
 			}
 			else {
-				std::cout << "\n" << inFileEXT << " Processed";
+				//std::cout << "\n" << inFileEXT << " Processed";
 			}
 		}
 	}
@@ -147,22 +154,27 @@ void runOnDir( std::string& input,
 			   std::filesystem::path& outputDir,
 			   int& imDim, int& buggary )
 {
-	for ( const auto& entry : std::filesystem::directory_iterator( input ) ) {
-		if ( is_regular_file( entry.path() ) ) {
+	try {
+		for ( const auto& entry : std::filesystem::directory_iterator( input ) ) {
+			if ( is_regular_file( entry.path() ) ) {
 
-			std::string ExtensionType = entry.path().extension().string();
+				std::string ExtensionType = entry.path().extension().string();
 
-			std::string inFileEXT = entry.path().string();
-			const __int64 index1 = inFileEXT.find_last_of( "/\\" );
-			std::string fileNoPathEXT = inFileEXT.substr( index1 + 1 );
-			std::string inFileNoEXT = entry.path().stem().string();
-			std::string croppedName = inFileNoEXT + "_cropped.png";
-			std::string outFileDir = outputDir.string();
-			std::string outFile = outFileDir + '\\' + fileNoPathEXT;
+				std::string inFileEXT = entry.path().string();
+				const __int64 index1 = inFileEXT.find_last_of( "/\\" );
+				std::string fileNoPathEXT = inFileEXT.substr( index1 + 1 );
+				std::string inFileNoEXT = entry.path().stem().string();
+				std::string croppedName = inFileNoEXT + "_cropped.png";
+				std::string outFileDir = outputDir.string();
+				std::string outFile = outFileDir + '\\' + fileNoPathEXT;
 
-			cropToDivisor( inFileEXT, inFileNoEXT, outFileDir, ExtensionType, imDim, buggary );
+				cropToDivisor( inFileEXT, inFileNoEXT, outFileDir, ExtensionType, imDim, buggary );
 
+			}
 		}
+	}
+	catch ( const std::exception& e ) {
+		std::cout << e.what();
 	}
 }
 
