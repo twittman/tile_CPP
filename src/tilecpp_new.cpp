@@ -13,16 +13,6 @@
     #define __int8 __int8_t
 #endif
 
-void copyFiles( Magick::Image image,
-				std::string& inFileEXT,
-				std::string& outFileDir )
-{
-	const __int64 index1 = inFileEXT.find_last_of( "/\\" );
-	std::string outputName = outFileDir + inFileEXT.substr( index1 + 1 );
-	image.write(outputName);
-
-}
-
 void cropTiles( int tileH, int tileW,
 				std::string& outFileDir,
 				std::string& inFileNoEXT,
