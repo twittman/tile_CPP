@@ -56,8 +56,8 @@ void cropToDivisor( std::string& inFileEXT,
 			Magick::Blob croppedNameBlob;
 			image.read( inFileEXT );
 
-			size_t sizeWidth = image.baseColumns();
-			size_t sizeHeight = image.baseRows();
+			auto sizeWidth = image.baseColumns();
+			auto sizeHeight = image.baseRows();
 			ssize_t sizeDiffW;
 			ssize_t sizeDiffH;
 			size_t sizePadW;
@@ -165,12 +165,14 @@ void runOnDir( std::string& input,
 				std::string ExtensionType = entry.path().extension().string();
 
 				std::string inFileEXT = entry.path().string();
-				const __int64 index1 = inFileEXT.find_last_of( "/\\" );
+				const auto index1 = inFileEXT.find_last_of( "/\\" );
 				std::string fileNoPathEXT = inFileEXT.substr( index1 + 1 );
 				std::string inFileNoEXT = entry.path().stem().string();
 				std::string croppedName = inFileNoEXT + "_cropped.png";
 				std::string outFileDir = outputDir.string();
-				std::string outFile = outFileDir + '\\' + fileNoPathEXT;
+				std::string outFile = outFileDir;
+                outFileDir.append("\\");
+                outFile.append( fileNoPathEXT );
 
 				cropToDivisor( inFileEXT, inFileNoEXT, outFileDir, ExtensionType, imDim, buggary );
 
@@ -223,7 +225,7 @@ int main( int argc, char** argv )
 	std::filesystem::path outputDir( output );
 
 	if ( std::filesystem::create_directory( outputDir ) ) {
-		std::cout << output << " Directory created" << "\n";
+		std::cout << output << " Directory created" << std::endl;
 	}
 
 	runOnDir( input, inputDir, output, outputDir, imDim, buggary );
