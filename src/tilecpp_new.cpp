@@ -18,7 +18,7 @@ void copyFiles( Magick::Image image,
 				std::string& outFileDir )
 {
 	const __int64 index1 = inFileEXT.find_last_of( "/\\" );
-	std::string outputName = outFileDir + inFileEXT.substr( index1 + 1 );;
+	std::string outputName = outFileDir + inFileEXT.substr( index1 + 1 );
 	image.write(outputName);
 
 }
