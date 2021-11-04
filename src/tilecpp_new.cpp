@@ -8,6 +8,11 @@
 #include <filesystem>
 #include "util.hpp"
 
+#ifdef __APPLE__
+    #define __int64 __int64_t
+    #define __int8 __int8_t
+#endif
+
 void copyFiles( Magick::Image image,
 				std::string& inFileEXT,
 				std::string& outFileDir )
