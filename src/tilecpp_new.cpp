@@ -13,6 +13,16 @@
     #define __int8 __int8_t
 #endif
 
+void copyFiles( Magick::Image image,
+				std::string& inFileEXT,
+				std::string& outFileDir )
+{
+	const __int64 index1 = inFileEXT.find_last_of( "/\\" );
+	std::string outputName = outFileDir + inFileEXT.substr( index1 + 1 );
+	image.write( outputName );
+
+}
+
 void cropTiles( int tileH, int tileW,
 				std::string& outFileDir,
 				std::string& inFileNoEXT,
@@ -73,53 +83,57 @@ void cropToDivisor( std::string& inFileEXT,
 
 			auto t1 = std::chrono::high_resolution_clock::now();
 			try {
-
-				sizeDiffW = static_cast<ssize_t>( twitls::count::diff( sizeWidth, imDim ));
-				sizeDiffH = static_cast<ssize_t>( twitls::count::diff( sizeHeight, imDim ));
-				sizePadW = static_cast<size_t>(twitls::count::padd( sizeDiffW, imDim ));
-				sizePadH = static_cast<size_t>( twitls::count::padd( sizeDiffH, imDim ));
-
-				divW = twitls::count::divv( sizeWidth, sizePadW );
-				divH = twitls::count::divv( sizeHeight, sizePadH );
-
-				if ( !sizeWidth % imDim == 0 || !sizeHeight % imDim == 0 ) {
-					image.magick( "PNG" );
-					image.crop( Magick::Geometry( sizePadW, sizePadH, divW / 2, divH / 2 ) );
-					image.repage();
-					image.write( &croppedNameBlob );
-					croppedImage.read( croppedNameBlob );
+				if ( (int)sizeWidth <= (int)imDim ) {
+					copyFiles( image, inFileEXT, outFileDir );
+					std::cout << inFileEXT << " has been copied." << "\n";
 				}
-				else if ( sizeWidth % imDim == 0 || sizeHeight % imDim == 0 ) {
-					croppedImage.read( inFileEXT );
-					croppedImage.repage();
+				else if ( (int)sizeWidth > (int)imDim ) {
+					sizeDiffW = static_cast<ssize_t>( twitls::count::diff( sizeWidth, imDim ) );
+					sizeDiffH = static_cast<ssize_t>( twitls::count::diff( sizeHeight, imDim ) );
+					sizePadW = static_cast<size_t>( twitls::count::padd( sizeDiffW, imDim ) );
+					sizePadH = static_cast<size_t>( twitls::count::padd( sizeDiffH, imDim ) );
+
+					divW = twitls::count::divv( sizeWidth, sizePadW );
+					divH = twitls::count::divv( sizeHeight, sizePadH );
+
+					if ( !sizeWidth % imDim == 0 || !sizeHeight % imDim == 0 ) {
+						image.magick( "PNG" );
+						image.crop( Magick::Geometry( sizePadW, sizePadH, divW / 2, divH / 2 ) );
+						image.repage();
+						image.write( &croppedNameBlob );
+						croppedImage.read( croppedNameBlob );
+					}
+					else if ( sizeWidth % imDim == 0 || sizeHeight % imDim == 0 ) {
+						croppedImage.read( inFileEXT );
+						croppedImage.repage();
+					}
+
+					croppedWidth = croppedImage.columns();
+					croppedHeight = croppedImage.rows();
+
+					// check for division by zero and evade it!
+					/////////
+					if ( croppedWidth / imDim == 0 ) {
+						tileW = 1;
+					}
+					else {
+						tileW = croppedWidth / imDim;
+					}
+
+					if ( croppedHeight / imDim == 0 ) {
+						tileH = 1;
+					}
+					else {
+						tileH = croppedHeight / imDim;
+					}
+
+
+					widthTile = (int)( croppedImage.columns() / tileW );
+					heightTile = (int)( croppedImage.rows() / tileH );
+
+					cropTiles( tileH, tileW, outFileDir, inFileNoEXT, croppedNameBlob, widthTile, heightTile );
+					std::cout << inFileEXT << " has been cropped." << "\n";
 				}
-
-				croppedWidth = croppedImage.columns();
-				croppedHeight = croppedImage.rows();
-
-				// check for division by zero and evade it!
-				/////////
-				if ( croppedWidth / imDim == 0 ) {
-					tileW = 1;
-				}
-				else {
-					tileW = croppedWidth / imDim;
-				}
-				
-				if ( croppedHeight / imDim == 0 ) {
-					tileH = 1;
-				}
-				else {
-					tileH = croppedHeight / imDim;
-				}
-
-
-				widthTile = (int)( croppedImage.columns() / tileW );
-				heightTile = (int)( croppedImage.rows() / tileH );
-
-				cropTiles( tileH, tileW, outFileDir, inFileNoEXT, croppedNameBlob, widthTile, heightTile );
-				std::cout << inFileEXT << " has been cropped." << "\n";
-
 			}
 			catch ( Magick::Exception& error )
 			{
