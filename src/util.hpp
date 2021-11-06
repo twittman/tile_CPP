@@ -4,28 +4,42 @@
 #include <string>
 #include <filesystem>
 
+void todo() {
+    std::cout << "Reached TODO code. Exiting." << std::endl;
+    exit(-1);
+}
+
 namespace twitls {
 	namespace vec_ops {
-		template<typename Vector>
-		auto split_vector( const Vector& v, unsigned num_lines )
+
+
+        template<typename Vector>
+        [[maybe_unused]] auto split_vector( const Vector& v, unsigned num_lines )
 		{
 			using Iterator = typename Vector::const_iterator;
 			std::vector<Vector> rtn;
 			Iterator it = v.cbegin();
 			const Iterator end = v.cend();
+            for (auto & i : v) {
+                todo();
+            }
 
-			while ( it != end ) {
-				Vector v;
-				std::back_insert_iterator<Vector> inserter( v );
-				const auto num_to_copy = std::min( static_cast<unsigned>(
-					std::distance( it, end ) ), num_lines );
-				std::copy( it, it + num_to_copy, inserter );
-				rtn.push_back( std::move( v ) );
-				std::advance( it, num_to_copy );
-			}
+
+//          This code below is dangerous and should never run. It needs to be reimplemented above.
+
+/*			while ( it != :end ) {
+                std::back_insert_iterator<Vector> inserter( v );
+                const auto num_to_copy = std::min( static_cast<unsigned>(
+                                                           std::distance( it, end ) ), num_lines );
+                std::copy( it, it + num_to_copy, inserter );
+                rtn.push_back( std::move( v ) );
+                std::advance( it, num_to_copy );
+            }
+*/
 			return rtn;
 		}
-		void print( std::vector<std::string> const& vecInput )
+
+        [[maybe_unused]] void print( std::vector<std::string> const& vecInput )
 		{
 			std::copy( vecInput.begin(), vecInput.end(), std::ostream_iterator<std::string>( std::cout, " " ) );
 		}
@@ -45,7 +59,7 @@ namespace twitls {
 		}
 	}
 	namespace count {
-		int countfiles( std::string& directoryCount )
+        [[maybe_unused]] int countfiles( std::string& directoryCount )
 		{
 			int numFiles = 0;
 			for ( const auto& entry : std::filesystem::directory_iterator( directoryCount ) ) {
@@ -57,32 +71,29 @@ namespace twitls {
 		}
 		auto diff( int dimension, int tileSize )
 		{
-			double difference;
-			return difference = ( ( static_cast<double>( dimension ) + tileSize ) / tileSize );
+			return ( static_cast<double>( dimension ) + tileSize ) / tileSize;
 		}
 		auto padd( int difference, int tileSize )
 		{
-			double padding;
-			return padding = ( ( static_cast<double>( difference ) - 1 ) * tileSize );
+			return static_cast<double>(( difference ) - 1 ) * tileSize;
 		}
 		auto divv( int dimension, int padding )
 		{
-			double divizor;
-			return divizor = ( static_cast<double>( dimension ) - padding );
+			return  static_cast<double>( dimension ) - padding;
 		}
-		auto isDiff( int W, int H )
+
+        [[maybe_unused]] auto isDiff( int W, int H )
 		{
-			int difference;
 			if ( W <= H ) {
-				return difference = H;
+				return H;
 			}
-			else if ( W >= H ) {
-				return difference = W;
+			else {
+				return W;
 			}
 		}
 	}
 	namespace randgen {
-		std::string randomNameGen( const int length )
+        [[maybe_unused]] std::string randomNameGen( const int length )
 		{
 			std::string randString;
 			static const char alphanum[] =
@@ -97,7 +108,8 @@ namespace twitls {
 			}
 			return randString;
 		}
-		int randomNumber( const int low, const int high )
+
+        [[maybe_unused]] int randomNumber( const int low, const int high )
 		{
 			std::random_device rd;
 			std::mt19937 generator( rd() );
@@ -105,17 +117,19 @@ namespace twitls {
 			int rNum = r01( generator );
 			return rNum;
 		}
-		std::string pickSampling()
+
+        [[maybe_unused]] std::string pickSampling()
 		{
-			srand( (unsigned int)time( NULL ) );
+			srand( (unsigned int)time( nullptr ) );
 			const std::string YUVsample[3] = {  "yuv422p",
 												"yuv420p",
 												"yuv410p" };
 			return YUVsample[rand() % 3];
 		}
-		std::string pickCompressor()
+
+        [[maybe_unused]] std::string pickCompressor()
 		{
-			srand( (unsigned int)time( NULL ) );
+			srand( (unsigned int)time( nullptr ) );
 			const std::string compressor[3] = { "libx264",
 												"libx265",
 												"libvpx-vp9" };
@@ -123,9 +137,9 @@ namespace twitls {
 		}
 	}
 	namespace scriptmake {
-		std::string ffmpegScriptShell( std::string directory, int leading_zeros, std::string fps,
-									   std::string codec, std::string pixelfmt,
-									   std::string CRF, std::string video_name )
+        [[maybe_unused]] std::string ffmpegScriptShell( const std::string& directory, int leading_zeros, const std::string& fps,
+									   const std::string& codec, const std::string& pixelfmt,
+									   const std::string& CRF, const std::string& video_name )
 		{
 			std::string ffmpeg_lead = "%0" + std::to_string( leading_zeros ) + "d";
 			std::string ffmpegCall( "ffmpeg" );
@@ -159,9 +173,10 @@ namespace twitls {
 			full_string_for_script += video_name;
 			return full_string_for_script;
 		}
-		std::string ffmpegScriptBat( std::string directory, int leading_zeros, std::string fps,
-									 std::string codec, std::string pixelfmt,
-									 std::string CRF, std::string video_name )
+
+        [[maybe_unused]] std::string ffmpegScriptBat( const std::string& directory, int leading_zeros, const std::string& fps,
+									 const std::string& codec, const std::string& pixelfmt,
+									 const std::string& CRF, const std::string& video_name )
 		{
 			std::string ffmpeg_lead = "%0" + std::to_string( leading_zeros ) + "d";
 			std::string ffmpegCall( "ffmpeg" );
@@ -197,7 +212,8 @@ namespace twitls {
 			full_string_for_script += video_name;
 			return full_string_for_script;
 		}
-		std::string extractScriptShell( std::string input_Video, int leading_zeros, std::string outputDirectory )
+
+        [[maybe_unused]] std::string extractScriptShell( const std::string& input_Video, int leading_zeros, const std::string& outputDirectory )
 		{
 			std::string ffmpeg_lead = "%0" + std::to_string( leading_zeros ) + "d";
 			std::string ffmpegCall( "ffmpeg" );
@@ -215,7 +231,8 @@ namespace twitls {
 			full_extract_string += ".png";
 			return full_extract_string;
 		}
-		std::string extractScriptBat( std::string input_Video, int leading_zeros, std::string outputDirectory )
+
+        [[maybe_unused]] std::string extractScriptBat( const std::string& input_Video, int leading_zeros, const std::string& outputDirectory )
 		{
 			std::string ffmpeg_lead = "%0" + std::to_string( leading_zeros ) + "d";
 			std::string ffmpegCall( "ffmpeg" );

@@ -8,15 +8,10 @@
 #include <filesystem>
 #include "util.hpp"
 
-void copyFiles( Magick::Image image,
-				std::string& inFileEXT,
-				std::string& outFileDir )
-{
-	const __int64 index1 = inFileEXT.find_last_of( "/\\" );
-	std::string outputName = outFileDir + inFileEXT.substr( index1 + 1 );;
-	image.write(outputName);
-
-}
+#ifdef __APPLE__
+    #define __int64 __int64_t
+    #define __int8 __int8_t
+#endif
 
 void cropTiles( int tileH, int tileW,
 				std::string& outFileDir,
@@ -42,7 +37,6 @@ void cropTiles( int tileH, int tileW,
 			catch ( Magick::Exception& error )
 			{
 				throw Magick::Exception( error );
-				std::cout << "You failed" << std::endl;
 			}
 		}
 	}
@@ -62,20 +56,20 @@ void cropToDivisor( std::string& inFileEXT,
 			Magick::Blob croppedNameBlob;
 			image.read( inFileEXT );
 
-			size_t sizeWidth = image.baseColumns();
-			size_t sizeHeight = image.baseRows();
-			ssize_t sizeDiffW = 0;
-			ssize_t sizeDiffH = 0;
-			size_t sizePadW = 0;
-			size_t sizePadH = 0;
-			double divW = 0;
-			double divH = 0;
-			size_t croppedWidth = 0;
-			size_t croppedHeight = 0;
-			size_t tileW = 0;
-			size_t tileH = 0;
-			size_t widthTile = 0;
-			size_t heightTile = 0;
+			auto sizeWidth = image.baseColumns();
+			auto sizeHeight = image.baseRows();
+			ssize_t sizeDiffW;
+			ssize_t sizeDiffH;
+			size_t sizePadW;
+			size_t sizePadH;
+			double divW;
+			double divH;
+			size_t croppedWidth;
+			size_t croppedHeight;
+			size_t tileW;
+			size_t tileH;
+			size_t widthTile;
+			size_t heightTile;
 
 			auto t1 = std::chrono::high_resolution_clock::now();
 			try {
@@ -130,7 +124,6 @@ void cropToDivisor( std::string& inFileEXT,
 			catch ( Magick::Exception& error )
 			{
 				throw Magick::Exception( error );
-				std::cout << "You failed" << std::endl;
 			}
 
 			auto t2 = std::chrono::high_resolution_clock::now();
@@ -156,7 +149,6 @@ void cropToDivisor( std::string& inFileEXT,
 	catch ( Magick::Exception& error )
 	{
 		throw Magick::Exception( error );
-		std::cout << "You failed" << std::endl;
 	}
 }
 
@@ -173,12 +165,14 @@ void runOnDir( std::string& input,
 				std::string ExtensionType = entry.path().extension().string();
 
 				std::string inFileEXT = entry.path().string();
-				const __int64 index1 = inFileEXT.find_last_of( "/\\" );
+				const auto index1 = inFileEXT.find_last_of( "/\\" );
 				std::string fileNoPathEXT = inFileEXT.substr( index1 + 1 );
 				std::string inFileNoEXT = entry.path().stem().string();
 				std::string croppedName = inFileNoEXT + "_cropped.png";
 				std::string outFileDir = outputDir.string();
-				std::string outFile = outFileDir + '\\' + fileNoPathEXT;
+				std::string outFile = outFileDir;
+                outFileDir.append("\\");
+                outFile.append( fileNoPathEXT );
 
 				cropToDivisor( inFileEXT, inFileNoEXT, outFileDir, ExtensionType, imDim, buggary );
 
@@ -231,7 +225,7 @@ int main( int argc, char** argv )
 	std::filesystem::path outputDir( output );
 
 	if ( std::filesystem::create_directory( outputDir ) ) {
-		std::cout << output << " Directory created" << "\n";
+		std::cout << output << " Directory created" << std::endl;
 	}
 
 	runOnDir( input, inputDir, output, outputDir, imDim, buggary );
